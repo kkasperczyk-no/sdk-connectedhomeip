@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Build example - Tizen
+name: Build example - K32W
 
 on:
   workflow_dispatch:
@@ -23,28 +23,28 @@ concurrency:
 
 env:
     CHIP_NO_LOG_TIMESTAMPS: true
-
+    
 jobs:
-    tizen:
-        name: Tizen
+    k32w:
+        name: K32W
+
+        env:
+            BUILD_TYPE: gn_k32w
 
         runs-on: ubuntu-latest
         if: github.actor != 'restyled-io[bot]'
 
         container:
-            image: ghcr.io/project-chip/chip-build-tizen:66
-            options: --user root
+            image: ghcr.io/project-chip/chip-build-k32w:38
             volumes:
                 - "/tmp/bloat_reports:/tmp/bloat_reports"
-                - "/tmp/output_binaries:/tmp/output_binaries"
-
         steps:
             - name: Checkout
               uses: actions/checkout@v4
             - name: Checkout submodules & Bootstrap
               uses: ./.github/actions/checkout-submodules-and-bootstrap
               with:
-                platform: tizen
+                platform: nxp
 
             - name: Set up environment for size reports
               uses: ./.github/actions/setup-size-reports
@@ -52,31 +52,40 @@ jobs:
               with:
                 gh-context: ${{ toJson(github) }}
 
-            - name: Build Tizen examples
+            - name: Build examples
               run: |
-                  ./scripts/run_in_build_env.sh \
-                      "./scripts/build/build_examples.py \
-                          --enable-flashbundle \
-                          --target tizen-arm-all-clusters \
-                          --target tizen-arm-chip-tool-ubsan \
-                          --target tizen-arm-light-with-ui \
-                          build \
-                          --copy-artifacts-to out/artifacts \
-                      "
-
-            - name: Bloat report - chip-tool
-              run: |
-                  .environment/pigweed-venv/bin/python3 scripts/tools/memory/gh_sizes.py \
-                    tizen arm chip-tool-ubsan out/tizen-arm-chip-tool-ubsan/chip-tool \
-                    /tmp/bloat_reports/
-            - name: Bloat report - all-clusters-app
+                  scripts/run_in_build_env.sh "\
+                      ./scripts/build/build_examples.py \
+                      --target k32w-k32w0-light-crypto-platform-tokenizer \
+                      --target k32w-k32w0-contact-crypto-platform-tokenizer \
+                      --target k32w-k32w0-contact-crypto-platform-low-power-nologs \
+                      --target k32w-k32w1-light-crypto-platform-openthread-ftd \
+                      --target k32w-k32w1-contact-crypto-platform-low-power-nologs \
+                      build \
+                      --copy-artifacts-to out/artifacts \
+                  "
+            - name: Get light size stats
               run: |
                   .environment/pigweed-venv/bin/python3 scripts/tools/memory/gh_sizes.py \
-                    tizen arm all-clusters-app out/tizen-arm-all-clusters/chip-all-clusters-app \
+                    k32w k32w0+release light \
+                    out/artifacts/k32w-k32w0-light-crypto-platform-tokenizer/chip-k32w0x-light-example.elf \
                     /tmp/bloat_reports/
-
+                  .environment/pigweed-venv/bin/python3 scripts/tools/memory/gh_sizes.py \
+                    k32w k32w1+release light \
+                    out/artifacts/k32w-k32w1-light-crypto-platform-openthread-ftd/chip-k32w1-light-example.elf \
+                    /tmp/bloat_reports/
+            - name: Get contact size stats
+              run: |
+                  .environment/pigweed-venv/bin/python3 scripts/tools/memory/gh_sizes.py \
+                    k32w k32w0+release contact \
+                    out/artifacts/k32w-k32w0-contact-crypto-platform-tokenizer/chip-k32w0x-contact-example.elf \
+                    /tmp/bloat_reports/
+                  .environment/pigweed-venv/bin/python3 scripts/tools/memory/gh_sizes.py \
+                    k32w k32w1+release contact \
+                    out/artifacts/k32w-k32w1-contact-crypto-platform-low-power-nologs/chip-k32w1-contact-example.elf \
+                    /tmp/bloat_reports/
             - name: Uploading Size Reports
               uses: ./.github/actions/upload-size-reports
               if: ${{ !env.ACT }}
               with:
-                platform-name: Tizen
+                platform-name: K32W

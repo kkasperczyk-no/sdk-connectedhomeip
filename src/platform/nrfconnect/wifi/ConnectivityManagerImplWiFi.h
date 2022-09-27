@@ -36,6 +36,10 @@ class ConnectivityManagerImplWiFi
 {
     friend class ConnectivityManager;
 
+public:
+    static constexpr uint16_t kRouterSolicitationIntervalMs = 300;
+    static constexpr uint8_t kRouterSolicitationMaxCount    = 3;
+
 protected:
     CHIP_ERROR InitWiFi();
 
@@ -71,12 +75,23 @@ private:
     ConnectivityManager::WiFiStationMode mStationMode{ ConnectivityManager::WiFiStationMode::kWiFiStationMode_Disabled };
     ConnectivityManager::WiFiStationState mStationState{ ConnectivityManager::WiFiStationState::kWiFiStationState_NotConnected };
     System::Clock::Timeout mWiFiStationReconnectInterval{};
+    uint8_t mRouterSolicitationCounter = 0;
 
     static const char * _WiFiStationModeToStr(ConnectivityManager::WiFiStationMode mode);
     static const char * _WiFiAPModeToStr(ConnectivityManager::WiFiAPMode mode);
     static const char * _WiFiStationStateToStr(ConnectivityManager::WiFiStationState state);
     static const char * _WiFiAPStateToStr(ConnectivityManager::WiFiAPState state);
+    static void _SendRouterSolicitation(System::Layer * layer, void * param);
+
+    friend ConnectivityManagerImplWiFi & ConnectivityMgrImplWiFi(void);
+
+    static ConnectivityManagerImplWiFi sInstance;
 };
+
+inline ConnectivityManagerImplWiFi & ConnectivityMgrImplWiFi(void)
+{
+    return ConnectivityManagerImplWiFi::sInstance;
+}
 
 } // namespace DeviceLayer
 } // namespace chip

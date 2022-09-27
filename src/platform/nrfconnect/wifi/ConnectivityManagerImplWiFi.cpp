@@ -26,6 +26,8 @@
 #include <platform/DiagnosticDataProvider.h>
 #include <platform/internal/BLEManager.h>
 
+#include <net/net_if.h>
+
 #include "ConnectivityManagerImplWiFi.h"
 #include "WiFiManager.h"
 
@@ -38,6 +40,8 @@ using namespace ::chip::TLV;
 
 namespace chip {
 namespace DeviceLayer {
+
+ConnectivityManagerImplWiFi ConnectivityManagerImplWiFi::sInstance;
 
 CHIP_ERROR ConnectivityManagerImplWiFi::InitWiFi()
 {
@@ -146,11 +150,33 @@ CHIP_ERROR ConnectivityManagerImplWiFi::_GetAndLogWiFiStatsCounters(void)
     return CHIP_NO_ERROR;
 }
 
+void ConnectivityManagerImplWiFi::_SendRouterSolicitation(System::Layer * layer, void * param)
+{
+    net_if * iface = net_if_get_default();
+    if (iface && iface->if_dev->link_addr.type == NET_LINK_ETHERNET)
+    {
+        net_if_start_rs(iface);
+        sInstance.mRouterSolicitationCounter++;
+        if (sInstance.mRouterSolicitationCounter < kRouterSolicitationMaxCount)
+        {
+            DeviceLayer::SystemLayer().StartTimer(System::Clock::Milliseconds32(kRouterSolicitationIntervalMs),
+                                                  _SendRouterSolicitation, nullptr);
+        }
+        else
+        {
+            sInstance.mRouterSolicitationCounter = 0;
+        }
+    }
+}
+
 void ConnectivityManagerImplWiFi::OnStationConnected()
 {
     // ensure the station is connected
     if (_IsWiFiStationConnected())
     {
+        DeviceLayer::SystemLayer().StartTimer(System::Clock::Milliseconds32(kRouterSolicitationIntervalMs), _SendRouterSolicitation,
+                                              this);
+
         ChipDeviceEvent connectEvent{};
         connectEvent.Type                          = DeviceEventType::kWiFiConnectivityChange;
         connectEvent.WiFiConnectivityChange.Result = kConnectivity_Established;

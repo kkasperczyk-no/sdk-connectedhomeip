@@ -194,6 +194,7 @@ CHIP_ERROR WiFiManager::Init()
 
     return CHIP_NO_ERROR;
 }
+
 CHIP_ERROR WiFiManager::Scan(const ByteSpan & ssid, ScanResultCallback resultCallback, ScanDoneCallback doneCallback,
                              bool internalScan)
 {
@@ -208,9 +209,10 @@ CHIP_ERROR WiFiManager::Scan(const ByteSpan & ssid, ScanResultCallback resultCal
     mSsidFound          = false;
     mRecoveryArmed      = true;
 
-    if (net_mgmt(NET_REQUEST_WIFI_SCAN, iface, NULL, 0))
+    int result = net_mgmt(NET_REQUEST_WIFI_SCAN, iface, NULL, 0);
+    if (result)
     {
-        ChipLogError(DeviceLayer, "Scan request failed");
+        ChipLogError(DeviceLayer, "Scan request failed, reason %d", result);
         return CHIP_ERROR_INTERNAL;
     }
 
@@ -511,6 +513,7 @@ void WiFiManager::ConnectHandler(Platform::UniquePtr<uint8_t> data)
 
 void WiFiManager::NetworkDrivenDisconnectHandler(Platform::UniquePtr<uint8_t>)
 {
+    ChipLogProgress(DeviceLayer, "NetworkDrivenDisconnectHandler");
     // Workaround: schedule the application level connection recovery in kSupplicantReconnectionTimeoutMs to give WPA supplicant
     // some time to restore it.
     if (!Instance().mRecoveryArmed)
@@ -530,6 +533,7 @@ void WiFiManager::NetworkDrivenDisconnectHandler(Platform::UniquePtr<uint8_t>)
 
 void WiFiManager::ApplicationDrivenDisconnectHandler(Platform::UniquePtr<uint8_t>)
 {
+    ChipLogProgress(DeviceLayer, "ApplicationDrivenDisconnectHandler");
     if (!Instance().mRecoveryArmed)
     {
         return;
@@ -578,6 +582,7 @@ System::Clock::Milliseconds32 WiFiManager::CalculateNextRecoveryTime()
 
 void WiFiManager::Recover(System::Layer *, void *)
 {
+    ChipLogProgress(DeviceLayer, "Recover");
     // Prevent scheduling recovery if we are already connected to the network.
     if (Instance().mWiFiState == WIFI_STATE_COMPLETED)
     {

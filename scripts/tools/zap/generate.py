@@ -16,7 +16,7 @@
 #
 
 import argparse
-import fcntl
+import platform
 import json
 import os
 import shutil
@@ -32,6 +32,13 @@ from zap_execution import ZapTool
 
 # TODO: Can we share this constant definition with zap_regen_all.py?
 DEFAULT_DATA_MODEL_DESCRIPTION_FILE = 'src/app/zap-templates/zcl/zcl.json'
+
+def isWindows():
+    return platform.system() == "Windows"
+
+# fcntl is not supported on widows platform due to lack of necessity of I/O control on file descriptor
+if not isWindows():
+    import fcntl
 
 
 @dataclass
@@ -334,16 +341,17 @@ class LockFileSerializer:
         self.lock_file = None
 
     def __enter__(self):
-        if not self.lock_file_path:
+        # fcntl is not supported on widows platform due to lack of necessity of I/O control on file descriptor
+        if not self.lock_file_path or isWindows():
             return
-
         self.lock_file = open(self.lock_file_path, 'wb')
         fcntl.lockf(self.lock_file, fcntl.LOCK_EX)
 
-    def __exit__(self, *args):
-        if not self.lock_file:
-            return
 
+    def __exit__(self, *args):
+        # fcntl is not supported on widows platform due to lack of necessity of I/O control on file descriptor
+        if not self.lock_file or isWindows():
+            return
         fcntl.lockf(self.lock_file, fcntl.LOCK_UN)
         self.lock_file.close()
         self.lock_file = None

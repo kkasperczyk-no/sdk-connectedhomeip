@@ -32,12 +32,12 @@ namespace chip {
 namespace DeviceLayer {
 namespace Internal {
 
-struct BluezEndpoint;
+class BluezEndpoint;
 
 class BluezConnection
 {
 public:
-    BluezConnection(BluezEndpoint * apEndpoint, BluezDevice1 * apDevice);
+    BluezConnection(const BluezEndpoint & aEndpoint, BluezDevice1 * apDevice);
     ~BluezConnection();
 
     const char * GetPeerAddress() const;
@@ -95,7 +95,7 @@ private:
         GAutoPtr<GVariant> mData;
     };
 
-    CHIP_ERROR Init();
+    CHIP_ERROR Init(const BluezEndpoint & aEndpoint);
 
     static CHIP_ERROR BluezDisconnect(BluezConnection * apConn);
 
@@ -115,7 +115,6 @@ private:
     static void UnsubscribeCharacteristicDone(GObject * aObject, GAsyncResult * aResult, gpointer apConn);
     static CHIP_ERROR UnsubscribeCharacteristicImpl(BluezConnection * apConn);
 
-    BluezEndpoint * mpEndpoint;
     BluezDevice1 * mpDevice;
 
     bool mNotifyAcquired = false;
@@ -124,12 +123,12 @@ private:
     BluezGattService1 * mpService = nullptr;
 
     BluezGattCharacteristic1 * mpC1 = nullptr;
-    IOChannel mC1Channel            = { 0 };
+    IOChannel mC1Channel            = {};
     BluezGattCharacteristic1 * mpC2 = nullptr;
-    IOChannel mC2Channel            = { 0 };
+    IOChannel mC2Channel            = {};
 #if CHIP_ENABLE_ADDITIONAL_DATA_ADVERTISING
     BluezGattCharacteristic1 * mpC3 = nullptr;
-    IOChannel mC3Channel            = { 0 };
+    IOChannel mC3Channel            = {};
 #endif
 };
 

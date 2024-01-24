@@ -133,6 +133,9 @@ class App:
         start_time = time.monotonic()
         ready, self.lastLogIndex = outpipe.CapturedLogContains(
             waitForString, self.lastLogIndex)
+        if ready:
+            self.lastLogIndex += 1
+
         while not ready:
             if server_process.poll() is not None:
                 died_str = ('Server died while waiting for %s, returncode %d' %
@@ -144,6 +147,8 @@ class App:
             time.sleep(0.1)
             ready, self.lastLogIndex = outpipe.CapturedLogContains(
                 waitForString, self.lastLogIndex)
+            if ready:
+                self.lastLogIndex += 1
 
         logging.debug('Success waiting for: %s' % waitForString)
 
@@ -160,6 +165,7 @@ class TestTarget(Enum):
     LOCK = auto()
     OTA = auto()
     BRIDGE = auto()
+    LIT_ICD = auto()
 
 
 @dataclass
@@ -171,12 +177,13 @@ class ApplicationPaths:
     ota_requestor_app: typing.List[str]
     tv_app: typing.List[str]
     bridge_app: typing.List[str]
+    lit_icd_app: typing.List[str]
     chip_repl_yaml_tester_cmd: typing.List[str]
     chip_tool_with_python_cmd: typing.List[str]
 
     def items(self):
         return [self.chip_tool, self.all_clusters_app, self.lock_app, self.ota_provider_app, self.ota_requestor_app,
-                self.tv_app, self.bridge_app, self.chip_repl_yaml_tester_cmd, self.chip_tool_with_python_cmd]
+                self.tv_app, self.bridge_app, self.lit_icd_app, self.chip_repl_yaml_tester_cmd, self.chip_tool_with_python_cmd]
 
 
 @dataclass
@@ -284,6 +291,8 @@ class TestDefinition:
                 target_app = paths.ota_requestor_app
             elif self.target == TestTarget.BRIDGE:
                 target_app = paths.bridge_app
+            elif self.target == TestTarget.LIT_ICD:
+                target_app = paths.lit_icd_app
             else:
                 raise Exception("Unknown test target - "
                                 "don't know which application to run")

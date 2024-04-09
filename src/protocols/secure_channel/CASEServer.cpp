@@ -179,6 +179,8 @@ void CASEServer::OnSessionEstablishmentError(CHIP_ERROR err)
 {
     ChipLogError(Inet, "CASE Session establishment failed: %" CHIP_ERROR_FORMAT, err.Format());
 
+    // Notify about CASE session establishment failure (FailedCaseSessionsEstablishmentCounter++, CaseSessionActiveTime stop or set to 0?)
+
     PrepareForSessionEstablishment();
 }
 
@@ -186,6 +188,9 @@ void CASEServer::OnSessionEstablished(const SessionHandle & session)
 {
     ChipLogProgress(Inet, "CASE Session established to peer: " ChipLogFormatScopedNodeId,
                     ChipLogValueScopedNodeId(session->GetPeer()));
+
+    // Notify about CASE session establishment success (EstablishedCaseSessionsCounter++, CaseSessionActiveTime latch timestamp, set to 0)
+
     PrepareForSessionEstablishment(session->GetPeer());
 }
 

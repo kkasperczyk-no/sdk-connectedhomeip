@@ -55,6 +55,8 @@ void SecureSession::Activate(const ScopedNodeId & localNode, const ScopedNodeId 
         mTable.NewerSessionAvailable(this);
 
     ChipLogDetail(Inet, "SecureSession[%p]: Activated - Type:%d LSID:%d", this, to_underlying(mSecureSessionType), mLocalSessionId);
+
+    // Notify that CASE session has been activated (ActiveCaseSessionsCounter++).
 }
 
 const char * SecureSession::StateToString(State state) const

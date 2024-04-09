@@ -247,6 +247,8 @@ protected:
         while (!mHolders.Empty())
         {
             mHolders.begin()->SessionReleased(); // SessionReleased must remove the item from the linked list
+
+            // Notify that CASE session has been dropped (DeactivatedCaseSessionsCounter++, ActiveSessionsCounter--).
         }
     }
 

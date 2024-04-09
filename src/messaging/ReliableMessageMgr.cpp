@@ -168,6 +168,8 @@ void ReliableMessageMgr::ExecuteActions()
                         " Send Cnt %d",
                         messageCounter, ChipLogValueExchange(&entry->ec.Get()), entry->sendCount);
 
+        // Notify about retransmission (MatterMessageRetransmissionCounter++)
+
         CalculateNextRetransTime(*entry);
         SendFromRetransTable(entry);
 

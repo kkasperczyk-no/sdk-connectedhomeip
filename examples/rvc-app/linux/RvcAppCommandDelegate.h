@@ -23,6 +23,8 @@
 #include <json/json.h>
 #include <platform/DiagnosticDataProvider.h>
 
+#include <string>
+
 class RvcAppCommandHandler
 {
 public:
@@ -52,6 +54,8 @@ private:
     void OnLowChargeHandler();
 
     void OnActivityCompleteHandler();
+
+    void OnAreaCompleteHandler();
 
     void OnErrorEventHandler(const std::string & error);
 

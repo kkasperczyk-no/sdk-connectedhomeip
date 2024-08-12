@@ -22,6 +22,11 @@ buildconfig_header("icd-server-buildconfig") {
   header = "ICDServerBuildConfig.h"
   header_dir = "app/icd/server"
 
+  if (chip_enable_icd_lit || chip_enable_icd_checkin ||
+      chip_enable_icd_user_active_mode_trigger) {
+    assert(chip_enable_icd_server)
+  }
+
   if (chip_enable_icd_lit) {
     assert(chip_enable_icd_checkin && chip_enable_icd_user_active_mode_trigger)
   }
@@ -61,6 +66,22 @@ source_set("notifier") {
   ]
 }
 
+source_set("check-in-back-off") {
+  sources = [ "ICDCheckInBackOffStrategy.h" ]
+
+  public_deps = [
+    ":monitoring-table",
+    "${chip_root}/src/lib/core",
+    "${chip_root}/src/lib/support",
+  ]
+}
+
+source_set("default-check-in-back-off") {
+  sources = [ "DefaultICDCheckInBackOffStrategy.h" ]
+
+  public_deps = [ ":check-in-back-off" ]
+}
+
 # ICD Manager source-set is broken out of the main source-set to enable unit tests
 # All sources and configurations used by the ICDManager need to go in this source-set
 source_set("manager") {
@@ -72,11 +93,14 @@ source_set("manager") {
   deps = [ ":icd-server-config" ]
 
   public_deps = [
+    ":check-in-back-off",
     ":configuration-data",
     ":notifier",
     ":observer",
-    "${chip_root}/src/app:subscription-manager",
+    "${chip_root}/src/app:subscription-info-provider",
+    "${chip_root}/src/app:test-event-trigger",
     "${chip_root}/src/credentials:credentials",
+    "${chip_root}/src/lib/address_resolve:address_resolve",
     "${chip_root}/src/messaging",
   ]
 
@@ -84,6 +108,7 @@ source_set("manager") {
     public_deps += [
       ":monitoring-table",
       ":sender",
+      "${chip_root}/src/app:app_config",
     ]
   }
 }

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Project CHIP Authors
+# Copyright (c) 2022-2024 Project CHIP Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import os
 import shlex
 from enum import Enum, auto
 
-from .builder import Builder
+from .builder import Builder, BuilderOutput
 
 
 class TelinkApp(Enum):
@@ -114,6 +114,7 @@ class TelinkApp(Enum):
 
 
 class TelinkBoard(Enum):
+    TLRS9118BDK40D = auto()
     TLSR9518ADK80D = auto()
     TLSR9528A = auto()
     TLSR9528A_RETENTION = auto()
@@ -121,7 +122,9 @@ class TelinkBoard(Enum):
     TLSR9258A_RETENTION = auto()
 
     def GnArgName(self):
-        if self == TelinkBoard.TLSR9518ADK80D:
+        if self == TelinkBoard.TLRS9118BDK40D:
+            return 'tlsr9118bdk40d'
+        elif self == TelinkBoard.TLSR9518ADK80D:
             return 'tlsr9518adk80d'
         elif self == TelinkBoard.TLSR9528A:
             return 'tlsr9528a'
@@ -148,7 +151,8 @@ class TelinkBuilder(Builder):
                  enable_rpcs: bool = False,
                  enable_factory_data: bool = False,
                  enable_4mb_flash: bool = False,
-                 mars_board_config: bool = False):
+                 mars_board_config: bool = False,
+                 usb_board_config: bool = False):
         super(TelinkBuilder, self).__init__(root, runner)
         self.app = app
         self.board = board
@@ -159,6 +163,7 @@ class TelinkBuilder(Builder):
         self.enable_factory_data = enable_factory_data
         self.enable_4mb_flash = enable_4mb_flash
         self.mars_board_config = mars_board_config
+        self.usb_board_config = usb_board_config
 
     def get_cmd_prefixes(self):
         if not self._runner.dry_run:
@@ -200,6 +205,9 @@ class TelinkBuilder(Builder):
         if self.mars_board_config:
             flags.append("-DTLNK_MARS_BOARD=y")
 
+        if self.usb_board_config:
+            flags.append("-DTLNK_USB_DONGLE=y")
+
         if self.options.pregen_dir:
             flags.append(f"-DCHIP_CODEGEN_PREGEN_DIR={shlex.quote(self.options.pregen_dir)}")
 
@@ -226,15 +234,10 @@ west build --cmake-only -d {outdir} -b {board} {sourcedir}{build_flags}
         self._Execute(['bash', '-c', cmd], title='Building ' + self.identifier)
 
     def build_outputs(self):
-        return {
-            '%s.elf' %
-            self.app.AppNamePrefix(): os.path.join(
-                self.output_dir,
-                'zephyr',
-                'zephyr.elf'),
-            '%s.map' %
-            self.app.AppNamePrefix(): os.path.join(
-                self.output_dir,
-                'zephyr',
-                'zephyr.map'),
-        }
+        yield BuilderOutput(
+            os.path.join(self.output_dir, 'zephyr', 'zephyr.elf'),
+            '%s.elf' % self.app.AppNamePrefix())
+        if self.options.enable_link_map_file:
+            yield BuilderOutput(
+                os.path.join(self.output_dir, 'zephyr', 'zephyr.map'),
+                '%s.map' % self.app.AppNamePrefix())

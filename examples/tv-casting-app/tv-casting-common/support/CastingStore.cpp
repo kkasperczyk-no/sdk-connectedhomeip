@@ -40,7 +40,8 @@ CastingStore * CastingStore::GetInstance()
 
 CHIP_ERROR CastingStore::AddOrUpdate(core::CastingPlayer castingPlayer)
 {
-    ChipLogProgress(AppServer, "CastingStore::AddOrUpdate");
+    ChipLogProgress(AppServer, "CastingStore::AddOrUpdate() called with CastingPlayer deviceName: %s",
+                    castingPlayer.GetDeviceName());
 
     // Read cache of CastingPlayers
     std::vector<core::CastingPlayer> castingPlayers = ReadAll();
@@ -56,20 +57,20 @@ CHIP_ERROR CastingStore::AddOrUpdate(core::CastingPlayer castingPlayer)
         {
             unsigned index        = (unsigned int) std::distance(castingPlayers.begin(), it);
             castingPlayers[index] = castingPlayer;
-            ChipLogProgress(AppServer, "CastingStore::AddOrUpdate updating CastingPlayer in CastingStore cache");
+            ChipLogProgress(AppServer, "CastingStore::AddOrUpdate() updating CastingPlayer in CastingStore cache");
             return WriteAll(castingPlayers); // return early
         }
     }
 
     // add *new* castingPlayer to CastingStore cache
     castingPlayers.push_back(castingPlayer);
-    ChipLogProgress(AppServer, "CastingStore::AddOrUpdate adding new CastingPlayer in CastingStore cache");
+    ChipLogProgress(AppServer, "CastingStore::AddOrUpdate() adding new CastingPlayer in CastingStore cache");
     return WriteAll(castingPlayers);
 }
 
 std::vector<core::CastingPlayer> CastingStore::ReadAll()
 {
-    ChipLogProgress(AppServer, "CastingStore::ReadAll called");
+    ChipLogProgress(AppServer, "CastingStore::ReadAll() called");
     CHIP_ERROR err = CHIP_NO_ERROR;
 
     std::vector<core::CastingPlayer> castingPlayers;
@@ -79,7 +80,7 @@ std::vector<core::CastingPlayer> CastingStore::ReadAll()
                                                                       kCastingStoreDataMaxBytes, &castingStoreDataSize);
     VerifyOrReturnValue(err == CHIP_NO_ERROR, std::vector<core::CastingPlayer>(),
                         ChipLogError(AppServer, "KeyValueStoreMgr.Get failed %" CHIP_ERROR_FORMAT, err.Format()));
-    ChipLogProgress(AppServer, "CastingStore::ReadAll Read TLV(CastingStoreData) from KVS store with size: %lu bytes",
+    ChipLogProgress(AppServer, "CastingStore::ReadAll() Read TLV(CastingStoreData) from KVS store with size: %lu bytes",
                     static_cast<unsigned long>(castingStoreDataSize));
 
     chip::TLV::TLVReader reader;
@@ -106,7 +107,7 @@ std::vector<core::CastingPlayer> CastingStore::ReadAll()
     err = reader.Get(version);
     VerifyOrReturnValue(err == CHIP_NO_ERROR, std::vector<core::CastingPlayer>(),
                         ChipLogError(AppServer, "TLVReader.Get failed %" CHIP_ERROR_FORMAT, err.Format()));
-    ChipLogProgress(AppServer, "CastingStore::ReadAll TLV(CastingStoreData) version: %d", version);
+    ChipLogProgress(AppServer, "CastingStore::ReadAll() TLV(CastingStoreData) version: %d", version);
 
     // Entering CastingPlayers container
     err = reader.Next();
@@ -177,6 +178,14 @@ std::vector<core::CastingPlayer> CastingStore::ReadAll()
             if (castingPlayerContainerTagNum == kCastingPlayerDeviceTypeIdTag)
             {
                 err = reader.Get(attributes.deviceType);
+                VerifyOrReturnValue(err == CHIP_NO_ERROR, std::vector<core::CastingPlayer>(),
+                                    ChipLogError(AppServer, "TLVReader.Get failed %" CHIP_ERROR_FORMAT, err.Format()));
+                continue;
+            }
+
+            if (castingPlayerContainerTagNum == kCastingPlayerSupportsCommissionerGeneratedPasscodeTag)
+            {
+                err = reader.Get(attributes.supportsCommissionerGeneratedPasscode);
                 VerifyOrReturnValue(err == CHIP_NO_ERROR, std::vector<core::CastingPlayer>(),
                                     ChipLogError(AppServer, "TLVReader.Get failed %" CHIP_ERROR_FORMAT, err.Format()));
                 continue;
@@ -414,14 +423,14 @@ std::vector<core::CastingPlayer> CastingStore::ReadAll()
                                 ChipLogError(AppServer, "TLVReader.ExitContainer failed %" CHIP_ERROR_FORMAT, err.Format()));
 
             // create a castingPlayer with Endpoints and add it to the castingPlayers to be returned
-            core::CastingPlayer castingPlayer(attributes);
+            core::CastingPlayer * castingPlayer = new core::CastingPlayer(attributes);
             for (auto & endpointAttributes : endpointAttributesList)
             {
-                std::shared_ptr<core::Endpoint> endpoint(new core::Endpoint(&castingPlayer, endpointAttributes));
+                std::shared_ptr<core::Endpoint> endpoint(new core::Endpoint(castingPlayer, endpointAttributes));
                 endpoint->RegisterClusters(endpointServerListMap[endpointAttributes.mId]);
-                castingPlayer.RegisterEndpoint(endpoint);
+                castingPlayer->RegisterEndpoint(endpoint);
             }
-            castingPlayers.push_back(castingPlayer);
+            castingPlayers.push_back(*castingPlayer);
             continue;
         }
     }
@@ -437,7 +446,8 @@ std::vector<core::CastingPlayer> CastingStore::ReadAll()
     VerifyOrReturnValue(err == CHIP_NO_ERROR, std::vector<core::CastingPlayer>(),
                         ChipLogError(AppServer, "TLVReader.ExitContainer failed %" CHIP_ERROR_FORMAT, err.Format()));
 
-    ChipLogProgress(AppServer, "CastingStore::ReadAll CastingPlayers size: %lu", static_cast<unsigned long>(castingPlayers.size()));
+    ChipLogProgress(AppServer, "CastingStore::ReadAll() CastingPlayers size: %lu",
+                    static_cast<unsigned long>(castingPlayers.size()));
     return castingPlayers;
 }
 
@@ -472,6 +482,8 @@ CHIP_ERROR CastingStore::WriteAll(std::vector<core::CastingPlayer> castingPlayer
         ReturnErrorOnFailure(tlvWriter.Put(chip::TLV::ContextTag(kCastingPlayerVendorIdTag), castingPlayer.GetVendorId()));
         ReturnErrorOnFailure(tlvWriter.Put(chip::TLV::ContextTag(kCastingPlayerProductIdTag), castingPlayer.GetProductId()));
         ReturnErrorOnFailure(tlvWriter.Put(chip::TLV::ContextTag(kCastingPlayerDeviceTypeIdTag), castingPlayer.GetDeviceType()));
+        ReturnErrorOnFailure(tlvWriter.Put(chip::TLV::ContextTag(kCastingPlayerSupportsCommissionerGeneratedPasscodeTag),
+                                           castingPlayer.GetSupportsCommissionerGeneratedPasscode()));
         ReturnErrorOnFailure(tlvWriter.Put(chip::TLV::ContextTag(kCastingPlayerPortTag), castingPlayer.GetPort()));
         ReturnErrorOnFailure(tlvWriter.PutBytes(chip::TLV::ContextTag(kCastingPlayerInstanceNameTag),
                                                 (const uint8_t *) castingPlayer.GetInstanceName(),

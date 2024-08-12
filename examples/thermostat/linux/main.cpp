@@ -21,7 +21,8 @@
 #include <app-common/zap-generated/ids/Clusters.h>
 #include <app/CommandHandler.h>
 #include <app/clusters/identify-server/identify-server.h>
-#include <app/util/af.h>
+
+#include "thermostat-manager.h"
 
 using namespace chip;
 using namespace chip::app;
@@ -75,7 +76,19 @@ void ApplicationShutdown() {}
 
 int main(int argc, char * argv[])
 {
-    VerifyOrDie(ChipLinuxAppInit(argc, argv) == 0);
+    if (ChipLinuxAppInit(argc, argv) != 0)
+    {
+        return -1;
+    }
+    ChipLogProgress(Zcl, "Starting Thermostat Manager");
+    CHIP_ERROR err = ThermostatManager().Init();
+
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(AppServer, "Failed to initialize thermostat manager: %" CHIP_ERROR_FORMAT, err.Format());
+        chip::DeviceLayer::PlatformMgr().Shutdown();
+        return -1;
+    }
     ChipLinuxAppMainLoop();
     return 0;
 }

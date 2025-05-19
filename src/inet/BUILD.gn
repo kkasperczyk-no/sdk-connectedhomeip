@@ -128,9 +128,9 @@ static_library("inet") {
     public_deps += [ "${lwip_root}:lwip" ]
   }
 
-  if (chip_system_config_use_open_thread_inet_endpoints) {
-    public_deps += [ "${chip_root}/third_party/openthread:openthread" ]
-  }
+  #if (chip_system_config_use_open_thread_inet_endpoints) {
+  #  public_deps += [ "${chip_root}/third_party/openthread:openthread" ]
+  #}
 
   if (chip_inet_config_enable_tcp_endpoint) {
     # Possible TCPEndpointImpl files:

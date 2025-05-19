@@ -268,7 +268,7 @@ void UDPEndPointImplNetworkFramework::GetPacketInfo(const nw_connection_t & aCon
 CHIP_ERROR UDPEndPointImplNetworkFramework::GetEndPoint(nw_endpoint_t & aEndPoint, const IPAddressType aAddressType,
                                                         const IPAddress & aAddress, uint16_t aPort)
 {
-    char addrStr[INET6_ADDRSTRLEN];
+    char addrStr[INET6_ADDRSTRLENv2];
     char portStr[INET_PORTSTRLEN];
 
     // Note: aAddress.ToString will return the IPv6 Any address if the address type is Any, but that's not what

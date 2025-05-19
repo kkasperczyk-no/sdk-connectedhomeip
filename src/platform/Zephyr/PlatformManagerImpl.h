@@ -23,7 +23,8 @@
 #pragma once
 
 #include <platform/PlatformManager.h>
-#include <platform/internal/GenericPlatformManagerImpl_Zephyr.h>
+// #include <platform/internal/GenericPlatformManagerImpl_Zephyr.h>
+#include <platform/internal/GenericPlatformManagerImpl_Nrfconnect.h>
 
 namespace chip {
 namespace DeviceLayer {
@@ -31,7 +32,8 @@ namespace DeviceLayer {
 /**
  * Concrete implementation of the PlatformManager singleton object for the Zephyr platforms.
  */
-class PlatformManagerImpl final : public PlatformManager, public Internal::GenericPlatformManagerImpl_Zephyr<PlatformManagerImpl>
+//class PlatformManagerImpl final : public PlatformManager, public Internal::GenericPlatformManagerImpl_Zephyr<PlatformManagerImpl>
+class PlatformManagerImpl final : public PlatformManager, public Internal::GenericPlatformManagerImpl_Nrfconnect<PlatformManagerImpl>
 {
     // Allow the PlatformManager interface class to delegate method calls to
     // the implementation methods provided by this class.
@@ -40,7 +42,8 @@ class PlatformManagerImpl final : public PlatformManager, public Internal::Gener
     // Allow the generic implementation base class to call helper methods on
     // this class.
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-    friend Internal::GenericPlatformManagerImpl_Zephyr<PlatformManagerImpl>;
+    //friend Internal::GenericPlatformManagerImpl_Zephyr<PlatformManagerImpl>;
+    friend Internal::GenericPlatformManagerImpl_Nrfconnect<PlatformManagerImpl>;
 #endif
 
 public:
@@ -65,7 +68,8 @@ private:
     System::Clock::Timestamp mStartTime      = System::Clock::kZero;
     uint32_t mSavedOperationalHoursSinceBoot = 0;
 
-    explicit PlatformManagerImpl(ThreadStack stack) : Internal::GenericPlatformManagerImpl_Zephyr<PlatformManagerImpl>(stack) {}
+    //explicit PlatformManagerImpl(ThreadStack stack) : Internal::GenericPlatformManagerImpl_Zephyr<PlatformManagerImpl>(stack) {}
+    explicit PlatformManagerImpl(ThreadStack stack) : Internal::GenericPlatformManagerImpl_Nrfconnect<PlatformManagerImpl>(stack) {}
 
     static PlatformManagerImpl sInstance;
 };

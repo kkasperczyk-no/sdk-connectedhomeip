@@ -125,9 +125,9 @@ bool IPAddress::FromString(const char * str, size_t strLen, IPAddress & output)
 {
     bool res = false;
 
-    if (strLen < INET6_ADDRSTRLEN)
+    if (strLen < INET6_ADDRSTRLENv2)
     {
-        char hostNameBuf[INET6_ADDRSTRLEN];
+        char hostNameBuf[INET6_ADDRSTRLENv2];
         memcpy(hostNameBuf, str, strLen);
         hostNameBuf[strLen] = 0;
         res                 = IPAddress::FromString(hostNameBuf, output);

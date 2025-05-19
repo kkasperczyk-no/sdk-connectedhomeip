@@ -25,7 +25,7 @@
 #include <platform/internal/BLEManager.h>
 
 #ifndef CONFIG_ARCH_POSIX
-#include <zephyr/net/net_if.h>
+//#include <zephyr/net/net_if.h>
 #endif
 
 #include <platform/internal/GenericConnectivityManagerImpl_UDP.ipp>

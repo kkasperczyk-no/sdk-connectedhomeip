@@ -229,7 +229,10 @@ private:
 
 #if CHIP_SYSTEM_CONFIG_USE_LWIP || CHIP_SYSTEM_CONFIG_USE_OPEN_THREAD_ENDPOINT
 
-class LayerFreeRTOS : public Layer
+// class LayerFreeRTOS : public Layer
+// {
+// };
+class LayerNrfconnect : public Layer
 {
 };
 

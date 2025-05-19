@@ -169,6 +169,9 @@ matter_add_gn_arg_bool  ("chip_enable_read_client"                CONFIG_CHIP_EN
 matter_add_gn_arg_bool  ("chip_mdns_minimal"                      CONFIG_WIFI_NRF70)
 matter_add_gn_arg_bool  ("chip_mdns_platform"                     CONFIG_NET_L2_OPENTHREAD)
 
+matter_add_gn_arg_bool  ("chip_system_config_use_open_thread_inet_endpoints" TRUE)
+matter_add_gn_arg_bool  ("chip_system_config_use_sockets"            FALSE)
+
 if (CONFIG_CHIP_ENABLE_ICD_SUPPORT)
     matter_add_gn_arg_bool  ("chip_enable_icd_lit"                       CONFIG_CHIP_ICD_LIT_SUPPORT)
     matter_add_gn_arg_bool  ("chip_enable_icd_checkin"                   CONFIG_CHIP_ICD_CHECK_IN_SUPPORT)

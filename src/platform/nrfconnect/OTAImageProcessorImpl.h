@@ -46,6 +46,11 @@ public:
     CHIP_ERROR ConfirmCurrentImage() override;
     void SetImageConfirmed() { mImageConfirmed = true; }
 
+#ifdef CONFIG_CHIP_DFU_MULTI_IMAGE_PACKAGE_USER_DATA
+    using DfuImageWriterRegisterCallback = CHIP_ERROR (*)();
+    void SetDfuImageWriterRegisterCallback(DfuImageWriterRegisterCallback callback) { mDfuImageWriterRegisterCallback = callback; }
+#endif
+
 protected:
     CHIP_ERROR PrepareDownloadImpl();
     CHIP_ERROR ProcessHeader(ByteSpan & aBlock);
@@ -58,6 +63,10 @@ protected:
 private:
     bool mImageConfirmed = false;
     uint32_t mDfuSyncMutexId;
+
+#ifdef CONFIG_CHIP_DFU_MULTI_IMAGE_PACKAGE_USER_DATA
+    DfuImageWriterRegisterCallback mDfuImageWriterRegisterCallback = nullptr;
+#endif
 };
 
 } // namespace DeviceLayer

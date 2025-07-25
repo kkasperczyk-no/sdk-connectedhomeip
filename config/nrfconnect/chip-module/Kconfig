@@ -481,4 +481,18 @@ config CHIP_WIFI
 	imply NET_STATISTICS_IPV6
 	imply NET_STATISTICS_USER_API
 
+config CHIP_DFU_MULTI_IMAGE_PACKAGE_USER_DATA
+	bool "Enable ustom user data passed in DFU package"
+
+config CHIP_DFU_MULTI_IMAGE_PACKAGE_USER_DATA_ID
+	int "User data image ID"
+	depends on CHIP_DFU_MULTI_IMAGE_PACKAGE_USER_DATA
+
+config CHIP_DFU_MULTI_IMAGE_PACKAGE_USER_DATA_CHUNK_SIZE
+	int "User data chunk size"
+	default 1024
+	depends on CHIP_DFU_MULTI_IMAGE_PACKAGE_USER_DATA
+	help
+	  Configures the size of the user data chunk that is received by the OTA Requestor.
+
 endif # CHIP

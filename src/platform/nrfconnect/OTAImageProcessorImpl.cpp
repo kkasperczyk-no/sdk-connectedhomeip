@@ -104,6 +104,13 @@ CHIP_ERROR OTAImageProcessorImpl::PrepareDownloadImpl()
         ReturnErrorOnFailure(System::MapErrorZephyr(dfu_multi_image_register_writer(&writer)));
     };
 
+#ifdef CONFIG_CHIP_DFU_MULTI_IMAGE_PACKAGE_USER_DATA
+    if (mDfuImageWriterRegisterCallback)
+    {
+        ReturnErrorOnFailure(mDfuImageWriterRegisterCallback());
+    }
+#endif
+
 #ifdef CONFIG_CHIP_CERTIFICATION_DECLARATION_STORAGE
     dfu_image_writer cdWriter;
     cdWriter.image_id = CONFIG_CHIP_CERTIFiCATION_DECLARATION_OTA_IMAGE_ID;

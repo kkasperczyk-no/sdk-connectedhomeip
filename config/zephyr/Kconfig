@@ -280,7 +280,7 @@ config CHIP_EXTENDED_DISCOVERY
 
 config CHIP_OPERATIONAL_TIME_SAVE_INTERVAL
 	int "Total operational time save interval (hours unit)"
-	default 10
+	default 2
 	range 1 4294967295
 	help
 	  Provides an interval in hours with which the node operational time is

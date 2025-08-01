@@ -96,8 +96,8 @@ CHIP_ERROR PlatformManagerImpl::UpdateOperationalHours(uint32_t * totalOperation
     ReturnErrorOnFailure(GetDiagnosticDataProvider().GetUpTime(upTimeS));
 
     uint32_t totalTime       = 0;
-    const uint32_t upTimeH   = upTimeS / 3600 < UINT32_MAX ? static_cast<uint32_t>(upTimeS / 3600) : UINT32_MAX;
-    const uint64_t deltaTime = upTimeH - mSavedOperationalHoursSinceBoot;
+    const uint32_t upTimeMin   = upTimeS / 60 < UINT32_MAX ? static_cast<uint32_t>(upTimeS / 60) : UINT32_MAX;
+    const uint64_t deltaTime = upTimeMin - mSavedOperationalHoursSinceBoot;
 
     ReturnErrorOnFailure(ConfigurationMgr().GetTotalOperationalHours(totalTime));
 
@@ -106,7 +106,7 @@ CHIP_ERROR PlatformManagerImpl::UpdateOperationalHours(uint32_t * totalOperation
     if (deltaTime > 0)
     {
         ConfigurationMgr().StoreTotalOperationalHours(totalTime);
-        mSavedOperationalHoursSinceBoot = upTimeH;
+        mSavedOperationalHoursSinceBoot = upTimeMin;
     }
 
     if (totalOperationalHours != nullptr)
@@ -147,8 +147,8 @@ CHIP_ERROR PlatformManagerImpl::_InitChipStack(void)
     // Start the timer to periodically save node operational hours.
     k_timer_init(&sOperationalHoursSavingTimer, &PlatformManagerImpl::OperationalHoursSavingTimerEventHandler, nullptr);
     k_timer_user_data_set(&sOperationalHoursSavingTimer, this);
-    k_timer_start(&sOperationalHoursSavingTimer, K_HOURS(CONFIG_CHIP_OPERATIONAL_TIME_SAVE_INTERVAL),
-                  K_HOURS(CONFIG_CHIP_OPERATIONAL_TIME_SAVE_INTERVAL));
+    k_timer_start(&sOperationalHoursSavingTimer, K_MINUTES(CONFIG_CHIP_OPERATIONAL_TIME_SAVE_INTERVAL),
+                  K_MINUTES(CONFIG_CHIP_OPERATIONAL_TIME_SAVE_INTERVAL));
 
 exit:
     return err;

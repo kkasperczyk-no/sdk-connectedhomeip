@@ -248,10 +248,16 @@ matter_generate_args_tmp_file()
 # Create Data Model target
 add_library(matter-data-model STATIC)
 
+# Append app version to kernel dependencies
+set(CHIP_GN_DEPENDENCIES kernel)
+if(EXISTS ${APPLICATION_SOURCE_DIR}/VERSION)
+    list(APPEND CHIP_GN_DEPENDENCIES app_version_h)
+endif()
+
 matter_build(chip
     LIB_TESTS   ${CONFIG_CHIP_BUILD_TESTS}
     DEVICE_INFO_EXAMPLE_PROVIDER ${CONFIG_CHIP_EXAMPLE_DEVICE_INFO_PROVIDER}
-    GN_DEPENDENCIES kernel
+    GN_DEPENDENCIES ${CHIP_GN_DEPENDENCIES}
     LINK_TARGETS matter-data-model
 )
 
